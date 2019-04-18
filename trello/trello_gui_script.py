@@ -6,7 +6,7 @@ def run_trello_gui_script():
 
     # General Introduction Text
     print("\033[1;36;40m=====================================\n Welcome for your trello status \n =====================================")
-    print("\033[0;37;40mThis program get trello data from your boards and export it into xlsx file. \n It is using your unique key and token and don\'t store it. \n")
+    print("\033[0;37;40mThis program get trello data from your boards and export it into xlsx file. \nIt is using your unique key and token and don\'t store it. \n")
     
     # Auth data
     print("\033[1;32;40mLet's start - ")
@@ -16,7 +16,7 @@ def run_trello_gui_script():
     
     # Board data
     pp.pprint(get_trello_boards(private_key, private_token))
-    print('3. Please enter your Trello boards hash with quotes, one by one, united by a comma between each other. \n F.E.: TreLlo2,TrEllo2,tRellO3:')
+    print('3. Please enter your Trello boards hash, one by one, united by a comma between each other. \n F.E.: TreLlo2,TrEllo2,tRellO3:')
     trello_boards = input("( it can be anyone from the list above) \n")
     my_boards = trello_boards.split(',')
     
