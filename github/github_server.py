@@ -7,17 +7,25 @@ from datetime import datetime
 pp = pprint.PrettyPrinter(depth=6)
 
 GITHUB_V3_URL = 'https://api.github.com'
-ACCESS_TOKEN = sys.argv[1]
-MY_TEAM = sys.argv[2].split(',') or []
+class TextColors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    NORMAL = '\033[0;37;40m'
 
 def get_my_repos(personal_token):
     """Get all repos of user
 
     Parameters:
-        access_token (string): 
+        personal_token (string): access token from github
 
     Returns:
-        repos (dict): 
+        github_repos_as_json (dict): dictionary of 100 recent repos in github of the user
         Or raising an error if http is failing
 
     """
@@ -31,13 +39,14 @@ def get_my_repos(personal_token):
 
 
 def get_pulls_of_a_repo(repo_name, personal_token):
-    """Get all repos of user
+    """Get all pulls of specific repository
 
     Parameters:
-        access_token (string): 
+        repo_name (string): name of the relevant repository
+        personal_token (string): access token from github
 
     Returns:
-        repos (dict): 
+        github_pulls_as_json (dict): dictionary of 100 recent pull requests of specific repository
         Or raising an error if http is failing
 
     """
@@ -50,50 +59,78 @@ def get_pulls_of_a_repo(repo_name, personal_token):
     raise Exception('Error retrieving contents at {}'.format(github_url))
 
 def get_statuses_of_a_pull(statuses_url, personal_token):
-    """Get all repos of user
+    """Get all checks statuses of a pull request
 
     Parameters:
-        access_token (string): 
+        statuses_url (string): Github url for checks statuses of a pull
+        personal_token (string): access token from github
 
     Returns:
-        repos (dict): 
+        statuses_of_a_pull_as_json (dict): dictionary of all checks statuses of a pull request
         Or raising an error if http is failing
 
     """
     github_url = statuses_url + '?access_token=' + personal_token
     response = simple_get(github_url)
-    github_pulls_as_json = json.loads(response)
-    return github_pulls_as_json
+    statuses_of_a_pull_as_json = json.loads(response)
+    return statuses_of_a_pull_as_json
+
+    # Raise an exception if we failed to get any data from the url
+    raise Exception('Error retrieving contents at {}'.format(github_url))
+
+
+def get_approved_prs_of_a_repo(repo_name, personal_token):
+    """
+
+    Parameters:
+        repo_name (string): The repository name of the pull requests
+        personal_token (string): access token from github
+
+    Returns:
+        approved_prs_of_a_repo_as_json (dict): dictionary of all approved pull requests
+        Or raising an error if http is failing
+
+    """
+    github_url = GITHUB_V3_URL + '/search/issues?q=is:open+is:pr+review:approved+repo:' + repo_name + '&access_token=' + personal_token
+    response = simple_get(github_url)
+    approved_prs_of_a_repo_as_json = json.loads(response) if response else []
+    return approved_prs_of_a_repo_as_json
 
     # Raise an exception if we failed to get any data from the url
     raise Exception('Error retrieving contents at {}'.format(github_url))
 
 
 
-def get_github_data(personal_token):
-    """
+def get_github_data(personal_token, my_team):
+    """Gel all Github data from all repositories
 
     Parameters:
-        access_token (string): 
+        personal_token (string): access token from github
 
     Returns:
-        repos (dict): 
+        prs (dict): all relevant pull requests from all avaiable repositories with useful data
         Or raising an error if http is failing
 
     """
     
 
-    repos = get_my_repos(ACCESS_TOKEN)
+    repos = get_my_repos(personal_token)
     prs = list()
-    for repo in repos: 
-      pulls_in_repo = get_pulls_of_a_repo(repo["full_name"], ACCESS_TOKEN)
+    for repo in repos:
+      pulls_in_repo = get_pulls_of_a_repo(repo["full_name"], personal_token)
+      approved_prs = get_approved_prs_of_a_repo(repo["full_name"], personal_token)
+      approved_prs_numbers = list()
+      if approved_prs and approved_prs["items"]:
+        for apr_item in approved_prs["items"]:
+            approved_prs_numbers.append(apr_item["number"])
       for pull_request in pulls_in_repo: 
           creator = pull_request["user"]["login"]
-          if creator not in MY_TEAM:
+          if creator not in my_team:
               break
+
           pr_data = dict()
           
-          pr_data["pr_name"] = pull_request["title"] + " - " + pull_request["user"]["login"]
+          pr_data["pr_name"] = pull_request["title"] + " - " + creator
           pr_data["pr_url"] = pull_request["url"]
           pr_data["pr_status"] = pull_request["state"]
           pr_data["pr_updated"] = pull_request["updated_at"]
@@ -109,13 +146,15 @@ def get_github_data(personal_token):
               pr_labels_names = pr_label['name']
           pr_data["pr_labels_names"] = pr_labels_names
 
-          pr_statuses = get_statuses_of_a_pull(pull_request["statuses_url"], ACCESS_TOKEN)
+          pr_statuses = get_statuses_of_a_pull(pull_request["statuses_url"], personal_token)
           pr_checks_statuses = dict()
           for pr_status in pr_statuses:
               if not pr_status['context'] in pr_checks_statuses: 
                   pr_checks_statuses[pr_status['context']] = pr_status['state']
           pr_data["pr_checks_statuses"] = pr_checks_statuses
-          prs.append(pr_data) 
+          pr_data["pr_approved"] = pull_request["number"] in approved_prs_numbers
+          prs.append(pr_data)
+
     return prs
 
 def print_github_data(pull_requests_data):
@@ -133,12 +172,17 @@ def print_github_data(pull_requests_data):
     """
     for pull_request in pull_requests_data:
         print("ֿ\n")
-        print("\033[4m{}. ({}, \033[1m{}\033[0;37;40m)\033[0;37;40m".format(pull_request["pr_name"], pull_request["pr_status"], pull_request["pr_labels_names"]))
+        print("{}{}. ({}){}".format(TextColors.UNDERLINE, pull_request["pr_name"], pull_request["pr_status"], TextColors.NORMAL))
+        print("{}{}{}".format(TextColors.WARNING, pull_request["pr_labels_names"], TextColors.NORMAL))
+        if pull_request["pr_approved"]:
+            print("{}Approved: {}{}".format(TextColors.OKGREEN, pull_request["pr_approved"], TextColors.NORMAL))
+        else:
+            print("{}Approved: {}{}".format(TextColors.FAIL, pull_request["pr_approved"], TextColors.NORMAL))
         for key,val in pull_request["pr_checks_statuses"].items():
             if val == "success":
-                print("\033[92m{} V\033[0;37;40m".format(key))
+                print("{}{} V{}".format(TextColors.OKGREEN, key, TextColors.NORMAL))
             if val == "failure":
-                print("\033[91m{} X\033[0;37;40m".format(key))
+                print("{}{} X{}".format(TextColors.FAIL, key, TextColors.NORMAL))
         then = datetime.strptime(pull_request["pr_updated"], "%Y-%m-%dT%H:%M:%SZ")
         now  = datetime.now()
         duration = now - then
@@ -151,5 +195,3 @@ def print_github_data(pull_requests_data):
         print("URL: {}".format(pull_request["pr_url"]))
     return
                 
-prs = get_github_data(ACCESS_TOKEN)
-print_github_data(prs)
