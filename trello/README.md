@@ -1,4 +1,5 @@
-# Trello 
+# Trello Management
+  A python script to manage trello cards status of a team from all relevant boards.
 
   ### Getting Started: 
   1. Run as menu script: 
@@ -31,9 +32,5 @@
     useful links:
     https://grantwinney.com/day-10-trello-api/
 
-# GitHub
 
-
-useful links:
-https://developer.github.com/v3/guides/getting-started/
 
