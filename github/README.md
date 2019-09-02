@@ -4,7 +4,7 @@
   ### Getting Started: 
   1. Run as line script: 
 
-     ```python trello_line_script.py  ${trello_boards_ids}  ${private_key} ${private_token} ${filter_type} ${my_team} ${my_labels}```
+     ```python trello_line_script.py  ${trello_boards_ids}  ${private_key} ${private_token} ${my_team} ${remove_column_flag}```
 
 
   ### Complited tasks:
