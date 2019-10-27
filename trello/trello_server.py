@@ -177,7 +177,6 @@ def get_trello_data(boards, team, labels, filter_type, personal_key, personal_to
     """
     members_names = {}
     list_names = {}
-    trello_data = []
     workbook = open_xlsx_file_and_return_workbook()
     worksheet = workbook.add_worksheet()
     
