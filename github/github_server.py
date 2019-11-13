@@ -242,6 +242,7 @@ def print_files_change_of_pr(repo_full_name, personal_token, pulls_in_repo):
         if duration.total_seconds() < week_in_seconds:
             creator = pull_request["user"]["login"]
             print("{}{} / {}. ({}) {}".format(TextColors.WARNING, pull_request['title'], creator, then.strftime("%Y-%m-%d"), TextColors.NORMAL))
+            print("{}".format(pull_request["html_url"]))
             pr_files = get_files_change_of_a_pr(repo_full_name, pull_request, personal_token)
             if pr_files:
                 files_changed = list()                
