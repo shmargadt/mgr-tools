@@ -50,7 +50,7 @@ def get_trello_board_data(board_id, personal_key, personal_token):
     # Raise an exception if we failed to get any data from the url
     raise Exception('Error retrieving contents at {}'.format(trello_url))
 
-def get_trello_board_cards_data(board_id, members_names, my_team, labels, filter_type, list_names, personal_key, personal_token):
+def get_trello_board_cards_data(board_id, members_names, my_team, list_names, personal_key, personal_token):
     """Get all relevant data from trello board cards
 
     Parameters:
@@ -58,8 +58,6 @@ def get_trello_board_cards_data(board_id, members_names, my_team, labels, filter
         members_names (dict): All the members names of the board,
                               member id as a key and member name as a value. F.e. {'TxCogm4e0rI': 'Tomer'}
         my_team (array): The names of the relevant trello members to look if they assigned to card.
-        labels (string): The relevant label to look for.
-        filter_type (string): Can be 'Team' or 'Label', it will decide the type of flitering by.
         list_names (dict): All the list (columns) of the board,
                            column id as a key and column name as a value. F.e. {'To19302Do': 'To Do'}
         personal_key (string): Personal developer API key of trello user.
@@ -79,18 +77,12 @@ def get_trello_board_cards_data(board_id, members_names, my_team, labels, filter
     for trello_card in trello_cards_as_json:
         parsed_card = {}
         parsed_card['members'] = list()
-        parsed_card['labels'] = list()
         is_team_card = False
-        is_label_card = False
         for members_id in trello_card['idMembers']:
             if members_names[members_id] in my_team:
                 is_team_card = True
                 parsed_card['members'].append(members_names[members_id])
-        for label in trello_card['labels']:
-            parsed_card['labels'].append(label['name'])
-            if label['name'] in labels:
-                is_label_card = True
-        if (not is_team_card and filter_type == 'team') or (not is_label_card and filter_type == 'label'):
+        if (not is_team_card):
             continue
         parsed_card['column'] = list_names[trello_card['idList']]
         parsed_card['name'] = trello_card['name']
@@ -152,14 +144,12 @@ def get_trello_board_members_data(board_id, personal_key, personal_token):
     # Raise an exception if we failed to get any data from the url
     raise Exception('Error retrieving contents at {}'.format(trello_url))
 
-def get_trello_data(boards, team, labels, filter_type, personal_key, personal_token):
+def get_trello_data(boards, team, remove_column_flag, personal_key, personal_token):
     """Get all relevant data of trello and export it into xlsx file
 
     Parameters:
         boards (array): All id's of relevant trello boards.
         team (array): The names of the relevant trello members to look if they assigned to card.
-        labels (string): The relevant label to look for.
-        filter_type (string): Can be 'Team' or 'Label', it will decide the type of flitering by.
         personal_key (string): Personal developer API key of trello user.
         personal_token (string): Generated Token of trello user.
 
@@ -187,11 +177,13 @@ def get_trello_data(boards, team, labels, filter_type, personal_key, personal_to
         trello_board_name = get_trello_board_data(board_id, personal_key, personal_token)['name']
         members_names = get_trello_board_members_data(board_id, personal_key, personal_token)
         list_names = get_trello_board_lists_data(board_id, personal_key, personal_token)
-        one_board_trello_data = get_trello_board_cards_data(board_id, members_names, team, labels, filter_type, list_names, personal_key, personal_token)
+        one_board_trello_data = get_trello_board_cards_data(board_id, members_names, team, list_names, personal_key, personal_token)
         if not one_board_trello_data:
             return
         all_trello_data[trello_board_name] = one_board_trello_data
         fieldnames = one_board_trello_data[0].keys
+        if remove_column_flag:
+            fieldnames.remove(remove_column_flag)
         options = { 
             'merge_format': workbook.add_format({
                 'bold': 1,

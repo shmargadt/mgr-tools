@@ -50,7 +50,7 @@ def get_pulls_of_a_repo(repo_name, personal_token):
         Or raising an error if http is failing
 
     """
-    github_url = GITHUB_V3_URL + '/repos/' + repo_name + '/pulls?per_page=100&access_token=' + personal_token
+    github_url = GITHUB_V3_URL + '/repos/' + repo_name + '/pulls?per_page=100&direction=desc&access_token=' + personal_token
     response = simple_get(github_url)
     github_pulls_as_json = json.loads(response)
     return github_pulls_as_json
@@ -157,6 +157,17 @@ def get_github_data(personal_token, my_team):
 
     return prs
 
+
+def get_gap_of_hours_n_minutes(earlier_date):
+    now  = datetime.now()
+    duration = now - earlier_date
+    duration_in_s = duration.total_seconds()
+    hours_divmod = divmod(duration_in_s, 3600)
+    gap_obj = dict()
+    gap_obj["hours"] = hours_divmod[0]
+    gap_obj["minutes"] = divmod(hours_divmod[1], 60)[0]
+    return gap_obj
+
 def print_github_data(pull_requests_data):
     """
 
@@ -184,13 +195,8 @@ def print_github_data(pull_requests_data):
             if val == "failure":
                 print("{}{} X{}".format(TextColors.FAIL, key, TextColors.NORMAL))
         then = datetime.strptime(pull_request["pr_updated"], "%Y-%m-%dT%H:%M:%SZ")
-        now  = datetime.now()
-        duration = now - then
-        duration_in_s = duration.total_seconds()
-        hours_divmod = divmod(duration_in_s, 3600)
-        hours = hours_divmod[0]
-        minutes = divmod(hours_divmod[1], 60)[0] 
-        print("Last updated before {} hours, {} minutes. ({})".format(hours, minutes, then.strftime("%m/%d/%Y, %H:%M:%S")))
+        gap_obj = get_gap_of_hours_n_minutes(then)
+        print("Last updated before {} hours, {} minutes. ({})".format(gap_obj["hours"], gap_obj["minutes"], then.strftime("%m/%d/%Y, %H:%M:%S")))
         print("Reviewers: {}".format(pull_request["pr_reviewers"]))
         print("URL: {}".format(pull_request["pr_url"]))
     return

@@ -1,4 +1,4 @@
-from trello_server import get_trello_boards, get_trello_data, get_trello_board_members_data
+from trello_server import get_trello_boards, get_trello_board_members_data
 import pprint
 pp = pprint.PrettyPrinter(depth=6)
 
@@ -21,29 +21,22 @@ def run_trello_gui_script():
     my_boards = trello_boards.split(',')
     
     # Members/Label Data
-    team_or_label = input("\033[0;33;40mDo you look for your team status or specific label status? [T/L] ")
     my_team = None
-    my_labels = []
 
     # Members Data
-    if team_or_label == 'T' or team_or_label == 't': 
-      filter_type = 'team'
-      dest = dict() 
-      for board_id in my_boards:
-        board_members = get_trello_board_members_data(board_id, private_key, private_token)
-        dest.update(board_members)
-      pp.pprint(dest)
-      trello_members = input("\033[0;37;40m4. Please enter your Trello members names with quotes, one by one, united by a comma between each other between each other. \n F.e. 'Tomer1','Meitale2','Roii3' \n" )
-      my_team = trello_members.split(',')
-    else: # Label Data
-      filter_type = 'label'
-      trello_label = input("\033[0;37;40m4. Please enter the label name or part of it: ")
-      my_labels = trello_label
+    dest = dict() 
+    for board_id in my_boards:
+      board_members = get_trello_board_members_data(board_id, private_key, private_token)
+      dest.update(board_members)
+    pp.pprint(dest)
+    trello_members = input("\033[0;37;40m4. Please enter your Trello members names with quotes, one by one, united by a comma between each other between each other. \n F.e. 'Tomer1','Meitale2','Roii3' \n" )
+    my_team = trello_members.split(',')
+    
 
 
     # Run as a script line
     print("\n\n\033[93mThis line script will generate the data for the same settings:")
-    line_of_script = "python trello_line_script.py " + ''.join(trello_boards) + " " + private_key + " " + private_token + " " + filter_type  + " " + ','.join(my_team)  + " " + ''.join(my_labels)
+    line_of_script = "python trello_line_script.py " + ''.join(trello_boards) + " " + private_key + " " + private_token + " " + ','.join(my_team)
     print("\033[1;37;40m" + line_of_script)
     print("\n\033[92mPlease run the above command in order to genreate your excel file!\n")
     return
