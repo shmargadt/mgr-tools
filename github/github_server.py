@@ -194,4 +194,76 @@ def print_github_data(pull_requests_data):
         print("Reviewers: {}".format(pull_request["pr_reviewers"]))
         print("URL: {}".format(pull_request["pr_url"]))
     return
-                
+
+def get_files_change_of_a_pr(repo_name, pr, personal_token):
+    """Get all files change of specific pull request
+
+    Parameters:
+        repo_name (string): name of the relevant repository
+        personal_token (string): access token from github
+
+    Returns:
+        github_files_as_json (dict): dictionary of 100 recent pull requests of specific repository
+        Or raising an error if http is failing
+
+    """
+
+    github_url = GITHUB_V3_URL + '/repos/' + repo_name + '/pulls/' + str(pr['number']) + '/files?access_token=' + personal_token
+    response = simple_get(github_url)
+    github_files_as_json = json.loads(response)
+    return github_files_as_json
+
+def get_merged_pulls_of_a_repo(repo_name, personal_token):
+    """
+
+    Parameters:
+        repo_name (string): The repository name of the pull requests
+        personal_token (string): access token from github
+
+    Returns:
+        approved_prs_of_a_repo_as_json (dict): dictionary of all approved pull requests
+        Or raising an error if http is failing
+
+    """
+    github_url = GITHUB_V3_URL + '/search/issues?q=is:pr+is:merged+repo:' + repo_name + '&access_token=' + personal_token
+    response = simple_get(github_url)
+    approved_prs_of_a_repo_as_json = json.loads(response) if response else []
+    return approved_prs_of_a_repo_as_json
+
+    # Raise an exception if we failed to get any data from the url
+    raise Exception('Error retrieving contents at {}'.format(github_url))
+
+def print_files_change_of_pr(repo_full_name, personal_token, pulls_in_repo):
+    for pull_request in pulls_in_repo:
+        then = datetime.strptime(pull_request["updated_at"], "%Y-%m-%dT%H:%M:%SZ")
+        now  = datetime.now()
+        duration = now - then
+        week_in_seconds = 604800
+        if duration.total_seconds() < week_in_seconds:
+            creator = pull_request["user"]["login"]
+            print("{}{} / {}. ({}) {}".format(TextColors.WARNING, pull_request['title'], creator, then.strftime("%Y-%m-%d"), TextColors.NORMAL))
+            print("{}".format(pull_request["html_url"]))
+            pr_files = get_files_change_of_a_pr(repo_full_name, pull_request, personal_token)
+            if pr_files:
+                files_changed = list()                
+                for pr_file in pr_files:
+                    if pr_file['filename'].find('src/') != -1: 
+                        files_changed.append(pr_file['filename'])
+            pp.pprint(files_changed)
+    return
+
+def get_github_repo_summary(personal_token, repo_full_name):
+    pending_pulls_in_repo = get_pulls_of_a_repo(repo_full_name, personal_token)
+    merged_pulls_in_repo = get_merged_pulls_of_a_repo(repo_full_name, personal_token)
+    # updated_at use for update
+    print("{}{}{}".format(TextColors.HEADER, "Last week changes", TextColors.NORMAL))
+    print_files_change_of_pr(repo_full_name, personal_token, merged_pulls_in_repo["items"])
+    print("{}{}{}".format(TextColors.HEADER, "Pending review", TextColors.NORMAL))
+    print_files_change_of_pr(repo_full_name, personal_token, pending_pulls_in_repo)
+    # pp.pprint(pending_pulls_in_repo[0])
+    # pp.pprint(merged_pulls_in_repo["items"][0]["updated_at"])
+    return merged_pulls_in_repo
+
+def print_repo_summary(pulls_in_repo):
+    # pp.pprint(pulls_in_repo)
+    return
