@@ -1,5 +1,5 @@
 # Trello Management
-  A python script to manage trello cards statused of a team from all relevant boards.
+  A python script to manage trello cards statuses of a team from all relevant boards.
 
   ### Getting Started: 
   1. Run as menu script: 
