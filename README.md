@@ -8,7 +8,7 @@
  [(lexico)](https://www.lexico.com/en/definition/productive)
 
 
-A useful tool for managing tasks pull reuqests statuses  .
+A useful tool for managing tasks and pull reuqests statuses  .
 
 ### Why to use it ?
 
