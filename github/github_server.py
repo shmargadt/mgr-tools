@@ -29,8 +29,8 @@ def get_my_repos(personal_token):
         Or raising an error if http is failing
 
     """
-    github_url = GITHUB_V3_URL + '/user/repos?per_page=100&access_token=' + personal_token
-    response = simple_get(github_url)
+    github_url = GITHUB_V3_URL + '/user/repos?per_page=100'
+    response = simple_get(github_url, personal_token)
     github_repos_as_json = json.loads(response)
     return github_repos_as_json
 
@@ -50,8 +50,8 @@ def get_pulls_of_a_repo(repo_name, personal_token):
         Or raising an error if http is failing
 
     """
-    github_url = GITHUB_V3_URL + '/repos/' + repo_name + '/pulls?per_page=100&direction=desc&access_token=' + personal_token
-    response = simple_get(github_url)
+    github_url = GITHUB_V3_URL + '/repos/' + repo_name + '/pulls?per_page=100&direction=desc'
+    response = simple_get(github_url, personal_token)
     github_pulls_as_json = json.loads(response)
     return github_pulls_as_json
 
@@ -70,8 +70,8 @@ def get_statuses_of_a_pull(statuses_url, personal_token):
         Or raising an error if http is failing
 
     """
-    github_url = statuses_url + '?access_token=' + personal_token
-    response = simple_get(github_url)
+    github_url = statuses_url
+    response = simple_get(github_url, personal_token)
     statuses_of_a_pull_as_json = json.loads(response)
     return statuses_of_a_pull_as_json
 
@@ -91,8 +91,8 @@ def get_approved_prs_of_a_repo(repo_name, personal_token):
         Or raising an error if http is failing
 
     """
-    github_url = GITHUB_V3_URL + '/search/issues?q=is:open+is:pr+review:approved+repo:' + repo_name + '&access_token=' + personal_token
-    response = simple_get(github_url)
+    github_url = GITHUB_V3_URL + '/search/issues?q=is:open+is:pr+review:approved+repo:' + repo_name
+    response = simple_get(github_url, personal_token)
     approved_prs_of_a_repo_as_json = json.loads(response) if response else []
     return approved_prs_of_a_repo_as_json
 
@@ -215,7 +215,7 @@ def get_files_change_of_a_pr(repo_name, pr, personal_token):
     """
 
     github_url = GITHUB_V3_URL + '/repos/' + repo_name + '/pulls/' + str(pr['number']) + '/files?access_token=' + personal_token
-    response = simple_get(github_url)
+    response = simple_get(github_url, personal_token)
     github_files_as_json = json.loads(response)
     return github_files_as_json
 
@@ -232,7 +232,7 @@ def get_merged_pulls_of_a_repo(repo_name, personal_token):
 
     """
     github_url = GITHUB_V3_URL + '/search/issues?q=is:pr+is:merged+repo:' + repo_name + '&access_token=' + personal_token
-    response = simple_get(github_url)
+    response = simple_get(github_url, personal_token)
     approved_prs_of_a_repo_as_json = json.loads(response) if response else []
     return approved_prs_of_a_repo_as_json
 
