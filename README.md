@@ -12,7 +12,7 @@ A useful tool for managing tasks and pull reuqests statuses  .
 
 ### Why to use it ?
 
-[stuck in the middle of the Judean desert](https://www.linkedin.com/in/tomer-shmargad-24b7a1aa/)
+[Staying on top of things](https://github.com/shmargadt/effective-blog)
 
 ### How to use it ?
 [Trello Tool](https://github.com/shmargadt/mgr-tools/blob/master/Trello/README.md)
